@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:podeli_smetka/screens/home_screen.dart';
+import 'package:podeli_smetka/screens/scan_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -16,7 +17,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _mainScreens = [
     const HomeScreen(), // Replace with your home screen widget
     const Center(child: Text('Add Event Screen')), // Placeholder for add event
-    const Center(child: Text('Scan Screen')), // Placeholder for scan
+    const Center(child: Text('Opening camera')) // redirect
   ];
 
   // Handles tab navigation
@@ -39,6 +40,13 @@ class _MainNavigationState extends State<MainNavigation> {
       return const SizedBox(); // Empty widget until navigation occurs
     }
 
+    if (_selectedIndex == 2){
+      Future.microtask(() {
+        Navigator.pushNamed(context, '/scan');
+      });
+      _selectedIndex = 0;
+    }
+
     return Scaffold(
       body: _mainScreens[_selectedIndex], // Switches the displayed screen
       bottomNavigationBar: BottomNavigationBar(
@@ -58,7 +66,7 @@ class _MainNavigationState extends State<MainNavigation> {
             label: "Додади",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
+            icon: Icon(Icons.flip),
             label: "Скенирај",
           ),
         ],

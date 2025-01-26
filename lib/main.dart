@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:podeli_smetka/screens/login_screen.dart';
 import 'package:podeli_smetka/screens/home_screen.dart';
 import 'package:podeli_smetka/screens/profile_screen.dart';
+import 'package:podeli_smetka/screens/scan_screen.dart';
 import 'package:podeli_smetka/widgets/main_navigation.dart';
 import 'firebase_options.dart';
 
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/app': (context) => const MainNavigation(),
         '/profile': (context) => const ProfileScreen(),
+        '/scan': (context) => const ScanScreen(),
       },
     );
   }
