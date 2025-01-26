@@ -33,6 +33,7 @@ class ProfileScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 service.signOutFromGoogle();
+                Navigator.pushReplacementNamed(context, '/login');
               },
               child: const Text('Одјави се'),
             ),
