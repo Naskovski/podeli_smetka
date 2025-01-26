@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
 
-class EventCard extends StatelessWidget {
+class EventListItem extends StatelessWidget {
   final Event event;
 
-  const EventCard({super.key, required this.event});
+  const EventListItem({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {

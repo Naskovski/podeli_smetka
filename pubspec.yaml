@@ -92,3 +92,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  fonts:
+  - family: Roboto
+
+  assets:
+    - assets/icons/
+    - assets/images/  # If you have other assets like images
+
