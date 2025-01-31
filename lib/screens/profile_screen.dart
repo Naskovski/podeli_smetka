@@ -141,13 +141,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       onPressed: () => _acceptInvite(index),
                                       child: const Text('Прифати'),
                                     ),
-                                    const SizedBox(width: 16),
                                     ElevatedButton(
                                       onPressed: () => _declineInvite(index),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.redAccent,
                                       ),
-                                      child: const Text('Одбиј'),
+                                      child: const Text('Одбиј', style: TextStyle( color: Colors.white),),
                                     ),
                                   ],
                                 ),
