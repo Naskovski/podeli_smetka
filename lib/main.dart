@@ -1,19 +1,26 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:podeli_smetka/screens/login_screen.dart';
-import 'package:podeli_smetka/screens/home_screen.dart';
 import 'package:podeli_smetka/screens/profile_screen.dart';
 import 'package:podeli_smetka/screens/scan_screen.dart';
 import 'package:podeli_smetka/widgets/main_navigation.dart';
+
 import 'firebase_options.dart';
 
-void main() async {
-  // Ensure Firebase is initialized before the app runs
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await dotenv.load(fileName: ".env");
+
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.purple[50],
+  ));
 
   runApp(const MyApp());
 }
@@ -41,7 +48,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// This widget checks if the user is logged in and navigates accordingly.
 class AuthenticationWrapper extends StatelessWidget {
   const AuthenticationWrapper({super.key});
 
@@ -50,15 +56,12 @@ class AuthenticationWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // If the user is logged in, navigate to the /app route
         if (snapshot.hasData) {
-          // Navigate to /app
           Future.microtask(() {
             Navigator.pushReplacementNamed(context, '/app');
           });
-          return const SizedBox(); // Empty widget until navigation occurs
+          return const SizedBox();
         }
-        // Otherwise, show the LoginScreen
         return const LoginScreen();
       },
     );

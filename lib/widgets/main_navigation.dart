@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:podeli_smetka/screens/home_screen.dart';
-import 'package:podeli_smetka/screens/scan_screen.dart';
+import 'package:podeli_smetka/screens/new_event_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -13,14 +13,12 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  // Define your screens here
   final List<Widget> _mainScreens = [
-    const HomeScreen(), // Replace with your home screen widget
-    const Center(child: Text('Add Event Screen')), // Placeholder for add event
+    const HomeScreen(),
+    const NewEventScreen(),
     const Center(child: Text('Opening camera')) // redirect
   ];
 
-  // Handles tab navigation
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -29,15 +27,13 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    // Check if the user is logged in
     final User? user = FirebaseAuth.instance.currentUser;
 
-    // If the user is not logged in, navigate to login screen
     if (user == null) {
       Future.microtask(() {
         Navigator.pushReplacementNamed(context, '/login');
       });
-      return const SizedBox(); // Empty widget until navigation occurs
+      return const SizedBox();
     }
 
     if (_selectedIndex == 2){
@@ -48,13 +44,13 @@ class _MainNavigationState extends State<MainNavigation> {
     }
 
     return Scaffold(
-      body: _mainScreens[_selectedIndex], // Switches the displayed screen
+      body: _mainScreens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.purple, // Active item color
-        unselectedItemColor: Colors.black54, // Inactive item color
-        type: BottomNavigationBarType.fixed, // Keeps all labels visible
+        selectedItemColor: Colors.purple,
+        unselectedItemColor: Colors.black54,
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.purple.shade50,
         items: const [
           BottomNavigationBarItem(

@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'package:podeli_smetka/models/user_model.dart';
+import 'package:podeli_smetka/models/user_paid.dart';
 
 enum ExpenseStatus { pending, paid, split }
 
@@ -7,9 +8,9 @@ class Expense {
   String name;
   String description;
   ExpenseStatus status;
-  List<String> paidBy; // UIDs of users who paid this expense
+  List<UserPaid> paidBy;
   double amount;
-  String createdBy; // UID of the user who created the expense
+  AppUser createdBy;
   DateTime createdAt;
 
   Expense({
@@ -23,30 +24,30 @@ class Expense {
     required this.createdAt,
   });
 
-  // Convert Expense to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
       'description': description,
-      'status': describeEnum(status),
-      'paidBy': paidBy,
+      'status': status.name,
+      'paidBy': paidBy.map((userPaid) => userPaid.toJson()).toList(),
       'amount': amount,
-      'createdBy': createdBy,
+      'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toIso8601String(),
     };
   }
 
-  // Create Expense from JSON
   factory Expense.fromJson(Map<String, dynamic> json) {
     return Expense(
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      status: ExpenseStatus.values.firstWhere((e) => describeEnum(e) == json['status']),
-      paidBy: List<String>.from(json['paidBy']),
+      status: ExpenseStatus.values.firstWhere((e) => e.name == json['status']),
+      paidBy: List<Map<String, dynamic>>.from(json['paidBy'])
+          .map((userPaidJson) => UserPaid.fromJson(userPaidJson))
+          .toList(),
       amount: (json['amount'] as num).toDouble(),
-      createdBy: json['createdBy'],
+      createdBy: AppUser.fromJson(json['createdBy']),
       createdAt: DateTime.parse(json['createdAt']),
     );
   }

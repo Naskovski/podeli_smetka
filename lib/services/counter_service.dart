@@ -1,9 +1,15 @@
 import 'package:camera/camera.dart';
 
 class CoinCounterService {
-  // Mock method for analyzing a coin photo
-  static Future<String> analyze(XFile photo) async {
-    await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-    return '53 ден.'; // Mock result
+  static Future<Map<String, String>> analyze(XFile photo) async {
+    await Future.delayed(const Duration(seconds: 2));
+    return {
+      'total': '53',
+      '1': '3',
+      '2': '2',
+      '5': '1',
+      '10': '4',
+      '50': '1',
+    };
   }
 }

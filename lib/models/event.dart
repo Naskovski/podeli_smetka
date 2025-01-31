@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:podeli_smetka/models/user_model.dart';
 
 import 'expense.dart';
 
@@ -10,10 +10,11 @@ class Event {
   String description;
   EventStatus status;
   DateTime date;
-  String location;
-  List<String> participants; // List of user UIDs
-  List<Expense> expenses; // Embedded expenses
-  String organizer; // UID of the event organizer
+  String? location;
+  Map<String, double>? locationCoordinates;
+  List<AppUser> participants;
+  List<Expense> expenses;
+  AppUser organizer;
 
   Event({
     required this.id,
@@ -21,41 +22,46 @@ class Event {
     required this.description,
     required this.status,
     required this.date,
-    required this.location,
+    this.location,
+    this.locationCoordinates,
     required this.participants,
     required this.expenses,
     required this.organizer,
   });
 
-  // Convert Event to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
       'description': description,
-      'status': describeEnum(status),
+      'status': status.name,
       'date': date.toIso8601String(),
       'location': location,
-      'participants': participants,
+      'locationCoordinates': locationCoordinates,
+      'participants': participants.map((user) => user.toJson()).toList(),
       'expenses': expenses.map((expense) => expense.toJson()).toList(),
-      'organizer': organizer,
+      'organizer': organizer.toJson(),
     };
   }
 
-  // Create Event from JSON
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      status: EventStatus.values.firstWhere((e) => describeEnum(e) == json['status']),
+      status: EventStatus.values.firstWhere((e) => e.name == json['status']),
       date: DateTime.parse(json['date']),
       location: json['location'],
-      participants: List<String>.from(json['participants']),
+      locationCoordinates: json['locationCoordinates'] != null
+          ? Map<String, double>.from(json['locationCoordinates'])
+          : null,
+      participants: (json['participants'] as List<dynamic>)
+          .map((userJson) => AppUser.fromJson(userJson))
+          .toList(),
       expenses: (json['expenses'] as List<dynamic>)
           .map((expenseJson) => Expense.fromJson(expenseJson))
           .toList(),
-      organizer: json['organizer'],
+      organizer: AppUser.fromJson(json['organizer']),
     );
   }
 }

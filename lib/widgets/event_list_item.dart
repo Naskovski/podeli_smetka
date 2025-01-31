@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
+import '../screens/event_details_screen.dart';
 
 class EventListItem extends StatelessWidget {
   final Event event;
@@ -14,13 +15,18 @@ class EventListItem extends StatelessWidget {
         title: Text(event.name),
         subtitle: Text(event.description),
         trailing: Text(
-          event.status == EventStatus.active ? 'Active' : 'Completed',
+          event.status == EventStatus.active ? 'Активен' : 'Завршен',
           style: TextStyle(
             color: event.status == EventStatus.active ? Colors.green : Colors.grey,
           ),
         ),
         onTap: () {
-          // Navigate to Event Details Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EventDetailsScreen(event: event),
+            ),
+          );
         },
       ),
     );
