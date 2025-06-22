@@ -1,7 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:podeli_smetka/models/participant.dart';
 
+import '../models/event.dart';
+import '../models/user_model.dart';
 import '../services/maps_service.dart';
 import '../widgets/add_participants_dialog.dart';
 import '../widgets/google_map_widget.dart';
@@ -14,11 +19,15 @@ class NewEventScreen extends StatefulWidget {
 }
 
 class _NewEventScreenState extends State<NewEventScreen> {
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
   TextEditingController _searchController = TextEditingController();
   GoogleMapController? _mapController;
   final MapsService _mapsService = MapsService();
   Set<Marker> _markers = {};
   final String mapsApiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+
+  final user = FirebaseAuth.instance.currentUser;
 
   LatLng? _selectedLocation;
   List<String> participantsEmails = [];
@@ -101,11 +110,13 @@ class _NewEventScreenState extends State<NewEventScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const TextField(
+              TextField(
+                controller: _titleController,
                 decoration: InputDecoration(labelText: 'Име на настанот'),
               ),
               const SizedBox(height: 10),
-              const TextField(
+              TextField(
+                controller: _descriptionController,
                 decoration: InputDecoration(labelText: 'Опис на настанот'),
               ),
               const SizedBox(height: 10),
@@ -177,18 +188,58 @@ class _NewEventScreenState extends State<NewEventScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_selectedLocation != null) {
+                  onPressed: () async {
+                    final title = _titleController.text.trim();
+                    final description = _descriptionController.text.trim();
+
+                    if (title.isEmpty || description.isEmpty || _selectedLocation == null) {
+                      print('title: $title, description: $description, location: $_selectedLocation');
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Настанот е креиран')),
+                        const SnackBar(content: Text('Пополнете ги сите полиња и изберете локација.')),
                       );
-                    } else {
+                      return;
+                    }
+
+                    try {
+                      var participants = participantsEmails.map((email) => Participant(email: email.trim())).toList();
+
+                      final event = Event(
+                        id: '',
+                        name: title,
+                        description: description,
+                        status: EventStatus.active,
+                        date: DateTime.now(),
+                        location: null,
+                        locationCoordinates: {
+                          'lat': _selectedLocation!.latitude,
+                          'lng': _selectedLocation!.longitude,
+                        },
+                        participants: participants,
+                        expenses: [],
+                        organizer: AppUser(
+                                firebaseUID: user?.uid ?? '',
+                                name: user?.displayName ?? '',
+                                email: user?.email ?? '',
+                                photoURL: user?.photoURL ?? ''
+                        ),
+                      );
+
+                      final docRef = await FirebaseFirestore.instance.collection('events').add(event.toJson());
+
+                      // TODO: Optionally call a Cloud Function to send invitations
+
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Ве молиме изберете локација')),
+                        const SnackBar(content: Text('Настанот е зачуван!')),
+                      );
+
+                      Navigator.of(context).pop(); // or go to event details page
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Грешка при зачувување: $e')),
                       );
                     }
                   },
+
                   child: const Text('Зачувај настан'),
                 ),
               ),

@@ -111,7 +111,8 @@ class EventDetailsScreen extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             ...event.participants.map((p) => UserListItem(
-              user: p,
+              user: p.user,
+              email: p.email,
               size: 12,
             )),
             const SizedBox(height: 16),
@@ -154,8 +155,8 @@ class EventDetailsScreen extends StatelessWidget {
                       child: GoogleMap(
                         initialCameraPosition: CameraPosition(
                           target: LatLng(
-                            event.locationCoordinates!['latitude']!,
-                            event.locationCoordinates!['longitude']!,
+                            event.locationCoordinates!['lat']!,
+                            event.locationCoordinates!['lng']!,
                           ),
                           zoom: 14,
                         ),
@@ -163,8 +164,8 @@ class EventDetailsScreen extends StatelessWidget {
                           Marker(
                             markerId: const MarkerId('eventLocation'),
                             position: LatLng(
-                              event.locationCoordinates!['latitude']!,
-                              event.locationCoordinates!['longitude']!,
+                              event.locationCoordinates!['lat']!,
+                              event.locationCoordinates!['lng']!,
                             ),
                           ),
                         },

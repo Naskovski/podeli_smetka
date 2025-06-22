@@ -16,12 +16,27 @@ class _HomeScreenState extends State<HomeScreen> {
   final EventService _eventService = EventService();
   EventStatus _selectedStatus = EventStatus.active;
 
+  late Future<List<Event>> _eventsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEvents();
+  }
+
+  void _loadEvents() {
+    _eventsFuture = _eventService.fetchEventsForUserAndStatus(_selectedStatus);
+  }
+
+  void _onStatusChanged(EventStatus newStatus) {
+    setState(() {
+      _selectedStatus = newStatus;
+      _loadEvents();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final events = _selectedStatus == EventStatus.active
-        ? _eventService.getActiveEvents()
-        : _eventService.getCompletedEvents();
-
     return Scaffold(
       appBar: const TitleBar(title: "Настани"),
       body: Column(
@@ -43,19 +58,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 selected: {_selectedStatus},
                 onSelectionChanged: (Set<EventStatus> newSelection) {
-                  setState(() {
-                    _selectedStatus = newSelection.first;
-                  });
+                  _onStatusChanged(newSelection.first);
                 },
               ),
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return EventListItem(event: event);
+            child: FutureBuilder<List<Event>>(
+              future: _eventsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Грешка: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('Нема настани за прикажување.'));
+                }
+
+                final events = snapshot.data!;
+                return ListView.builder(
+                  itemCount: events.length,
+                  itemBuilder: (context, index) {
+                    return EventListItem(event: events[index]);
+                  },
+                );
               },
             ),
           ),

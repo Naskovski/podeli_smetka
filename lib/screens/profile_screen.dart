@@ -22,10 +22,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchInvites();
   }
 
-  void _fetchInvites() {
+  void _fetchInvites() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final invites = EventService().getInvitesForUser(user);
+      final invites = await EventService().getInvitesForUser(user);
       setState(() {
         _invites = invites;
       });

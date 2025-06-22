@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:podeli_smetka/models/participant.dart';
 import 'package:podeli_smetka/models/user_model.dart';
 
 import 'expense.dart';
@@ -12,7 +14,7 @@ class Event {
   DateTime date;
   String? location;
   Map<String, double>? locationCoordinates;
-  List<AppUser> participants;
+  List<Participant> participants;
   List<Expense> expenses;
   AppUser organizer;
 
@@ -38,7 +40,8 @@ class Event {
       'date': date.toIso8601String(),
       'location': location,
       'locationCoordinates': locationCoordinates,
-      'participants': participants.map((user) => user.toJson()).toList(),
+      'participants': participants.map((p) => p.toJson()).toList(),
+      'participantEmails': participants.map((p) => p.email).toList(),
       'expenses': expenses.map((expense) => expense.toJson()).toList(),
       'organizer': organizer.toJson(),
     };
@@ -56,7 +59,7 @@ class Event {
           ? Map<String, double>.from(json['locationCoordinates'])
           : null,
       participants: (json['participants'] as List<dynamic>)
-          .map((userJson) => AppUser.fromJson(userJson))
+          .map((p) => Participant.fromJson(p))
           .toList(),
       expenses: (json['expenses'] as List<dynamic>)
           .map((expenseJson) => Expense.fromJson(expenseJson))
@@ -64,4 +67,27 @@ class Event {
       organizer: AppUser.fromJson(json['organizer']),
     );
   }
+
+  factory Event.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Event(
+      id: doc.id,
+      name: data['name'],
+      description: data['description'],
+      status: EventStatus.values.firstWhere((e) => e.name == data['status']),
+      date: DateTime.parse(data['date']),
+      location: data['location'],
+      locationCoordinates: data['locationCoordinates'] != null
+          ? Map<String, double>.from(data['locationCoordinates'])
+          : null,
+      participants: (data['participants'] as List<dynamic>)
+          .map((p) => Participant.fromJson(p))
+          .toList(),
+      expenses: (data['expenses'] as List<dynamic>? ?? [])
+          .map((e) => Expense.fromJson(e))
+          .toList(),
+      organizer: AppUser.fromJson(data['organizer']),
+    );
+  }
+
 }
