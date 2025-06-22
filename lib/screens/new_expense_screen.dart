@@ -1,9 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:podeli_smetka/models/event.dart';
+
+import '../models/expense.dart';
+import '../models/user_model.dart';
+import '../services/expense_service.dart';
 
 class NewExpenseScreen extends StatefulWidget {
-  final String eventId;
+  final Event event;
 
-  const NewExpenseScreen({super.key, required this.eventId});
+  const NewExpenseScreen({super.key, required this.event});
 
   @override
   State<NewExpenseScreen> createState() => _NewExpenseScreenState();
@@ -15,17 +21,52 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
   String description = '';
   double amount = 0.0;
 
-  void _saveExpense() {
+  void _saveExpense() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Expense added successfully!')),
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You must be logged in to add an expense.')),
+        );
+        return;
+      }
+
+      final newExpense = Expense(
+        id: UniqueKey().toString(), // or use uuid package
+        name: name,
+        description: description,
+        status: ExpenseStatus.pending, // or your default
+        paidBy: [], // start empty or as you want
+        amount: amount,
+        createdBy: AppUser(
+          firebaseUID: user.uid,
+          name: user.displayName ?? 'Anonymous',
+          email: user.email ?? '',
+          photoURL: user.photoURL ?? '',
+        ),
+        createdAt: DateTime.now(),
       );
 
-      Navigator.pop(context);
+      try {
+        setState(() {
+          widget.event.expenses.add(newExpense);
+        });
+
+        await ExpenseService().addExpenseToEvent(widget.event.id, newExpense);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Expense added successfully!')),
+        );
+        Navigator.pop(context, widget.event);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add expense: $e')),
+        );
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

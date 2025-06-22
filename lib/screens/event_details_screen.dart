@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/event.dart';
 import '../models/expense.dart';
@@ -11,30 +11,42 @@ import '../widgets/expense_card.dart';
 import '../widgets/user_list_item.dart';
 import 'new_expense_screen.dart';
 
-class EventDetailsScreen extends StatelessWidget {
+class EventDetailsScreen extends StatefulWidget {
   final Event event;
 
   const EventDetailsScreen({super.key, required this.event});
 
   @override
+  State<EventDetailsScreen> createState() => _EventDetailsScreenState();
+}
+
+class _EventDetailsScreenState extends State<EventDetailsScreen> {
+  late Event _event;
+
+  @override
+  void initState() {
+    super.initState();
+    _event = widget.event;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final totalExpenses =
-    event.expenses.fold(0.0, (sum, expense) => sum + expense.amount);
-    final paidExpenses = event.expenses
+    _event.expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+    final paidExpenses = _event.expenses
         .where((expense) => expense.status == ExpenseStatus.paid)
         .fold(0.0, (sum, expense) => sum + expense.amount);
 
-    // Mock calculation
     final userBalance = Random().nextInt(2001) - 1000;
-
     final currentUser = FirebaseAuth.instance.currentUser;
-    final isOrganizer = currentUser?.uid == event.organizer.firebaseUID;
+    final isOrganizer = currentUser?.uid == _event.organizer.firebaseUID;
 
     return Scaffold(
-      appBar: AppBar(title: Text(
-          event.name,
+      appBar: AppBar(
+        title: Text(
+          _event.name,
           style: Theme.of(context).textTheme.headlineSmall,
-        )
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -42,17 +54,17 @@ class EventDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              event.description,
+              _event.description,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 8),
-            if (event.location != null)
+            if (_event.location != null)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(Icons.pin_drop),
                   Text(
-                    ' ${event.location}',
+                    ' ${_event.location}',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ],
@@ -66,12 +78,10 @@ class EventDetailsScreen extends StatelessWidget {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: event.expenses.length,
+              itemCount: _event.expenses.length,
               itemBuilder: (context, index) {
-                final expense = event.expenses[index];
-                return ExpenseCard(
-                  expense: expense,
-                );
+                final expense = _event.expenses[index];
+                return ExpenseCard(expense: expense);
               },
             ),
             const SizedBox(height: 16),
@@ -80,13 +90,19 @@ class EventDetailsScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final updatedEvent = await Navigator.push<Event>(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => NewExpenseScreen(eventId: event.id),
+                        builder: (context) => NewExpenseScreen(event: _event),
                       ),
                     );
+
+                    if (updatedEvent != null) {
+                      setState(() {
+                        _event = updatedEvent;
+                      });
+                    }
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('Додај нов трошок'),
@@ -110,7 +126,7 @@ class EventDetailsScreen extends StatelessWidget {
               'Учесници:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            ...event.participants.map((p) => UserListItem(
+            ..._event.participants.map((p) => UserListItem(
               user: p.user,
               email: p.email,
               size: 12,
@@ -127,7 +143,7 @@ class EventDetailsScreen extends StatelessWidget {
                       builder: (BuildContext context) {
                         return AddParticipantsDialog(
                           onInvite: (List<String> emails) {
-                            // TODO: impl invite logic -> service.invite(emails, event)
+                            // TODO: implement invite logic
                           },
                         );
                       },
@@ -139,7 +155,7 @@ class EventDetailsScreen extends StatelessWidget {
               ),
             const SizedBox(height: 16),
 
-            if (event.locationCoordinates != null)
+            if (_event.locationCoordinates != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -155,8 +171,8 @@ class EventDetailsScreen extends StatelessWidget {
                       child: GoogleMap(
                         initialCameraPosition: CameraPosition(
                           target: LatLng(
-                            event.locationCoordinates!['lat']!,
-                            event.locationCoordinates!['lng']!,
+                            _event.locationCoordinates!['lat']!,
+                            _event.locationCoordinates!['lng']!,
                           ),
                           zoom: 14,
                         ),
@@ -164,8 +180,8 @@ class EventDetailsScreen extends StatelessWidget {
                           Marker(
                             markerId: const MarkerId('eventLocation'),
                             position: LatLng(
-                              event.locationCoordinates!['lat']!,
-                              event.locationCoordinates!['lng']!,
+                              _event.locationCoordinates!['lat']!,
+                              _event.locationCoordinates!['lng']!,
                             ),
                           ),
                         },
