@@ -1,11 +1,14 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/event.dart';
 import '../models/expense.dart';
+import '../models/participant.dart';
+import '../services/event_service.dart';
 import '../widgets/add_participants_dialog.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/user_list_item.dart';
@@ -13,7 +16,6 @@ import 'new_expense_screen.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final Event event;
-
   const EventDetailsScreen({super.key, required this.event});
 
   @override
@@ -27,6 +29,28 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   void initState() {
     super.initState();
     _event = widget.event;
+  }
+
+  Future<void> _addParticipants(List<String> emails, ) async {
+    try {
+      await EventService().addParticipantsToEvent(widget.event.id, emails);
+      setState(() {
+        final existing = widget.event.participants.map((p) => p.email.toLowerCase()).toSet();
+        final newOnes = emails
+            .where((email) => !existing.contains(email.toLowerCase()))
+            .map((email) => Participant(email: email.trim()))
+            .toList();
+        widget.event.participants.addAll(newOnes);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Учесниците се додадени.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Неуспешно додавање: $e')),
+      );
+    }
   }
 
   @override
@@ -142,9 +166,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       context: context,
                       builder: (BuildContext context) {
                         return AddParticipantsDialog(
-                          onInvite: (List<String> emails) {
-                            // TODO: implement invite logic
-                          },
+                          onInvite: _addParticipants,
                         );
                       },
                     );

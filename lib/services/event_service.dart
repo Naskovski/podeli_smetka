@@ -70,4 +70,28 @@ class EventService {
     // TODO: Replace with Firestore invite fetching logic if needed
     return []; // Implement as needed
   }
+
+  Future<void> addParticipantsToEvent(String eventId, List<String> emails) async {
+    final eventRef = _firestore.collection('events').doc(eventId);
+
+    final snapshot = await eventRef.get();
+    if (!snapshot.exists) {
+      throw Exception("Event not found");
+    }
+
+    final List<dynamic> existingParticipants = snapshot.data()?['participants'] ?? [];
+
+    final existingEmails = existingParticipants.map((p) => p['email'].toString().toLowerCase()).toSet();
+    final newEmails = emails.where((e) => !existingEmails.contains(e.toLowerCase())).toList();
+
+    final newParticipants = newEmails
+        .map((email) => {'email': email.trim()})
+        .toList();
+
+    if (newParticipants.isEmpty) return;
+
+    await eventRef.update({
+      'participants': FieldValue.arrayUnion(newParticipants),
+    });
+  }
 }
