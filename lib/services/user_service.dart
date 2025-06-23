@@ -1,42 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/user_model.dart';
 
 class UserDataService {
   final currentUser = FirebaseAuth.instance.currentUser;
-
-  final List<AppUser> mockUsers = [
-    AppUser(
-      firebaseUID: 'user1',
-      name: 'Марко Петров',
-      photoURL: 'https://example.com/photos/marko_petrov.jpg',
-      email: 'marko.petrov@example.com',
-    ),
-    AppUser(
-      firebaseUID: 'user2',
-      name: 'Елена Стојановска',
-      photoURL: 'https://example.com/photos/elena_stojanovska.jpg',
-      email: 'elena.stojanovska@example.com',
-    ),
-    AppUser(
-      firebaseUID: 'user3',
-      name: 'Иван Јованов',
-      photoURL: 'https://example.com/photos/ivan_jovanov.jpg',
-      email: 'ivan.jovanov@example.com',
-    ),
-    AppUser(
-      firebaseUID: 'user4',
-      name: 'Ана Димитрова',
-      photoURL: 'https://example.com/photos/ana_dimitrova.jpg',
-      email: 'ana.dimitrova@example.com',
-    ),
-    AppUser(
-      firebaseUID: 'user5',
-      name: 'Стефан Николов',
-      photoURL: 'https://example.com/photos/stefan_nikolov.jpg',
-      email: 'stefan.nikolov@example.com',
-    ),
-  ];
 
   AppUser getCurrentUser() {
     if (currentUser != null) {
@@ -50,8 +18,25 @@ class UserDataService {
     return AppUser(firebaseUID: "", name: "", photoURL: "", email: "");
   }
 
-  List<AppUser> getAllUsers() {
-    final currentAppUser = getCurrentUser();
-    return [...mockUsers, currentAppUser];
+  AppUser getPublicInfoByEmail(String email) {
+    Future<AppUser?> getPublicInfoByEmail(String email) async {
+      final doc = await FirebaseFirestore.instance
+          .collection('userData')
+          .doc(email)
+          .collection('docRef')
+          .doc('profile')
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data()!;
+        return AppUser(
+          firebaseUID: data['firebaseUID'] ?? '',
+          name: data['name'] ?? '',
+          photoURL: data['photoURL'] ?? '',
+          email: data['email'] ?? email,
+        );
+      }
+      return null;
+    }
   }
 }

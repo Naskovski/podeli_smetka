@@ -202,6 +202,7 @@ class _NewEventScreenState extends State<NewEventScreen> {
 
                     try {
                       var participants = participantsEmails.map((email) => Participant(email: email.trim())).toList();
+                      participants.add(Participant(email: user!.email!, status: ParticipantStatus.accepted));
 
                       final event = Event(
                         id: '',
@@ -232,7 +233,7 @@ class _NewEventScreenState extends State<NewEventScreen> {
                         const SnackBar(content: Text('Настанот е зачуван!')),
                       );
 
-                      Navigator.of(context).pop(); // or go to event details page
+                      Navigator.of(context).pop();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Грешка при зачувување: $e')),

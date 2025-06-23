@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:podeli_smetka/models/invite.dart';
 import 'package:podeli_smetka/models/participant.dart';
 import 'package:podeli_smetka/models/user_model.dart';
 
@@ -41,7 +42,9 @@ class Event {
       'location': location,
       'locationCoordinates': locationCoordinates,
       'participants': participants.map((p) => p.toJson()).toList(),
-      'participantEmails': participants.map((p) => p.email).toList(),
+      'invitedParticipantEmails': participants.where((p) => p.status == ParticipantStatus.invited).map((p) => p.email).toList(),
+      'acceptedParticipantEmails': participants.where((p) => p.status == ParticipantStatus.accepted).map((p) => p.email).toList(),
+      'declinedParticipantEmails': participants.where((p) => p.status == ParticipantStatus.declined).map((p) => p.email).toList(),
       'expenses': expenses.map((expense) => expense.toJson()).toList(),
       'organizer': organizer.toJson(),
     };
@@ -87,6 +90,16 @@ class Event {
           .map((e) => Expense.fromJson(e))
           .toList(),
       organizer: AppUser.fromJson(data['organizer']),
+    );
+  }
+
+  Invite toInvite() {
+    return Invite(
+      id: id,
+      event: this,
+      invitee: organizer,
+      sentAt: DateTime.now(),
+      status: InviteStatus.pending,
     );
   }
 

@@ -47,7 +47,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       'assets/icons/ctn_w_google.png',
                       height: 50,
                     ),
+                  ),const SizedBox(height: 40),
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                ),
+                onPressed: () async {
+                  userCredential.value = await authService.signOutFromGoogle();
+                  if (userCredential.value != null) {
+                    Navigator.pushReplacementNamed(context, '/app');
+                  }
+                },
+                child: Text("signout")
+            ),
                 ],
               ),
             ),

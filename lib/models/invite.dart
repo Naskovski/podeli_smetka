@@ -8,7 +8,6 @@ enum InviteStatus {
 class Invite {
   final String id;
   final Event event;
-  final AppUser invited;
   final AppUser invitee;
   final DateTime sentAt;
   InviteStatus status;
@@ -16,7 +15,6 @@ class Invite {
   Invite({
     required this.id,
     required this.event,
-    required this.invited,
     required this.invitee,
     required this.sentAt,
     this.status = InviteStatus.pending,
