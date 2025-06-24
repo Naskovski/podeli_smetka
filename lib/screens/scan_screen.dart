@@ -12,7 +12,8 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> {
   late CameraController _controller;
-  late Future<void> _initializeControllerFuture;
+  Future<void>? _initializeControllerFuture; // nullable Future
+
   List<CameraDescription> cameras = [];
   bool _isTakingPicture = false;
 
@@ -29,20 +30,26 @@ class _ScanScreenState extends State<ScanScreen> {
       ResolutionPreset.high,
     );
     _initializeControllerFuture = _controller.initialize();
-    setState(() {});
+    setState(() {}); // Rebuild now that future is assigned
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading until the controller future is assigned
+    if (_initializeControllerFuture == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white54),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Stack(
@@ -57,8 +64,7 @@ class _ScanScreenState extends State<ScanScreen> {
               }
             },
           ),
-          if (_isTakingPicture)
-            const Center(child: CircularProgressIndicator()),
+          if (_isTakingPicture) const Center(child: CircularProgressIndicator()),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -200,7 +206,6 @@ class _ScanScreenState extends State<ScanScreen> {
       },
     );
   }
-
 
   @override
   void dispose() {
