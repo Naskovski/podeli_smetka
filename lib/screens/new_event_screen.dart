@@ -30,6 +30,7 @@ class _NewEventScreenState extends State<NewEventScreen> {
   final user = FirebaseAuth.instance.currentUser;
 
   LatLng? _selectedLocation;
+  String? _locationName;
   List<String> participantsEmails = [];
   bool _isSearching = false;
 
@@ -73,6 +74,7 @@ class _NewEventScreenState extends State<NewEventScreen> {
                           ));
 
                           _selectedLocation = place.location;
+                          _locationName = place.name;
 
                           _mapController?.animateCamera(
                             CameraUpdate.newLatLngZoom(_selectedLocation!, 15),
@@ -210,7 +212,7 @@ class _NewEventScreenState extends State<NewEventScreen> {
                         description: description,
                         status: EventStatus.active,
                         date: DateTime.now(),
-                        location: null,
+                        location: _locationName ?? 'Непозната локација',
                         locationCoordinates: {
                           'lat': _selectedLocation!.latitude,
                           'lng': _selectedLocation!.longitude,

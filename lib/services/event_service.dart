@@ -1,9 +1,15 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:podeli_smetka/models/event.dart';
 import 'package:podeli_smetka/models/invite.dart';
 import 'package:podeli_smetka/models/participant.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+
+import '../models/expense.dart';
+import '../models/transaction.dart';
+import '../models/user_model.dart';
 
 class EventService {
   final _firestore = FirebaseFirestore.instance;
@@ -27,8 +33,16 @@ class EventService {
         .where('acceptedParticipantEmails', arrayContains: email)
         .get();
 
-    return snapshot.docs.map((doc) => Event.fromFirestore(doc)).toList();
+    final events = <Event>[];
+    for (final doc in snapshot.docs) {
+      final transactions = await fetchTransactionsForEvent(doc.id);
+      final event = Event.fromFirestore(doc, transactions: transactions);
+      events.add(event);
+    }
+
+    return events;
   }
+
 
   Future<List<Event>> fetchEventsForUserAndStatus(EventStatus status) async {
     final email = await _getCurrentUserEmail();
@@ -39,8 +53,16 @@ class EventService {
         .where('status', isEqualTo: status.name)
         .get();
 
-    return snapshot.docs.map((doc) => Event.fromFirestore(doc)).toList();
+    final events = <Event>[];
+    for (final doc in snapshot.docs) {
+      final transactions = await fetchTransactionsForEvent(doc.id);
+      final event = Event.fromFirestore(doc, transactions: transactions);
+      events.add(event);
+    }
+
+    return events;
   }
+
 
   Future<void> addEvent(Event event) async {
     final json = event.toJson();
@@ -50,7 +72,9 @@ class EventService {
   Future<Event> getEventById(String eventId) async {
     final doc = await _firestore.collection('events').doc(eventId).get();
     if (!doc.exists) throw Exception('Event not found');
-    return Event.fromFirestore(doc);
+
+    final transactions = await fetchTransactionsForEvent(eventId);
+    return Event.fromFirestore(doc, transactions: transactions);
   }
 
   Future<void> updateEvent(String eventId, Event event) async {
@@ -119,4 +143,62 @@ class EventService {
       'newStatus': status,
     });
   }
+
+  double getUserBalance(Event event, String userUID) {
+    var balance = 0.0;
+
+    final totalExpenses = event.expenses.fold<double>(0.0, (sum, expense) => sum + expense.amount);
+
+    final userBalanceFromExpenses = event.expenses
+        .where((expense) => expense.createdBy.firebaseUID == userUID)
+        .fold<double>(0.0, (sum, expense) => sum + expense.amount);
+
+    final userBalancePaidTransactions = event.transactions
+        .where((transaction) => transaction.fromUserId == userUID && transaction.status == TransactionStatus.accepted)
+        .fold<double>(0.0, (sum, transaction) => sum + transaction.amount);
+
+    final userBalanceReceivedTransactions = event.transactions
+        .where((transaction) => transaction.toUserId == userUID && transaction.status == TransactionStatus.accepted)
+        .fold<double>(0.0, (sum, transaction) => sum + transaction.amount);
+
+    final acceptedParticipantsCount = event.participants
+        .where((p) => p.status == ParticipantStatus.accepted).length;
+
+    final participantShare = totalExpenses / acceptedParticipantsCount;
+
+    return balance
+        + userBalanceFromExpenses
+        + userBalancePaidTransactions
+        - userBalanceReceivedTransactions
+        - participantShare;
+  }
+
+  double getTotalSumPaid(Event event) {
+    final totalTransactions = event.transactions
+        .where((t) => t.status == TransactionStatus.accepted)
+        .fold<double>(0.0, (sum, t) => sum + t.amount);
+
+    final totalExpenses = event.expenses.fold<double>(0.0, (sum, expense) => sum + expense.amount);
+
+    final acceptedParticipantsCount = event.participants
+        .where((p) => p.status == ParticipantStatus.accepted).length;
+
+    final participantShare = totalExpenses / acceptedParticipantsCount;
+
+    return totalTransactions + totalExpenses - participantShare;
+  }
+
+  Future<List<TransactionModel>> fetchTransactionsForEvent(String eventId) async {
+    final querySnapshot = await _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('transactions')
+        .get();
+
+    return querySnapshot.docs
+        .map((doc) => TransactionModel.fromJson(doc.id, doc.data()))
+        .toList();
+  }
+
+
 }

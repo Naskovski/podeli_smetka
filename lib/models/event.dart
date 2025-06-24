@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:podeli_smetka/models/invite.dart';
 import 'package:podeli_smetka/models/participant.dart';
+import 'package:podeli_smetka/models/transaction.dart';
 import 'package:podeli_smetka/models/user_model.dart';
 
 import 'expense.dart';
@@ -18,6 +21,7 @@ class Event {
   List<Participant> participants;
   List<Expense> expenses;
   AppUser organizer;
+  List<TransactionModel> transactions = [];
 
   Event({
     required this.id,
@@ -30,6 +34,7 @@ class Event {
     required this.participants,
     required this.expenses,
     required this.organizer,
+    this.transactions = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -71,7 +76,7 @@ class Event {
     );
   }
 
-  factory Event.fromFirestore(DocumentSnapshot doc) {
+  factory Event.fromFirestore(DocumentSnapshot doc, {List<TransactionModel>? transactions}) {
     final data = doc.data() as Map<String, dynamic>;
     return Event(
       id: doc.id,
@@ -90,6 +95,7 @@ class Event {
           .map((e) => Expense.fromJson(e))
           .toList(),
       organizer: AppUser.fromJson(data['organizer']),
+      transactions: transactions ?? [],
     );
   }
 

@@ -28,17 +28,15 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You must be logged in to add an expense.')),
+          const SnackBar(content: Text('Мора да бидете најавени за да додадете трошок')),
         );
         return;
       }
 
       final newExpense = Expense(
-        id: UniqueKey().toString(), // or use uuid package
+        id: UniqueKey().toString(),
         name: name,
         description: description,
-        status: ExpenseStatus.pending, // or your default
-        paidBy: [], // start empty or as you want
         amount: amount,
         createdBy: AppUser(
           firebaseUID: user.uid,
@@ -56,12 +54,12 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
 
         await ExpenseService().addExpenseToEvent(widget.event.id, newExpense);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expense added successfully!')),
+          const SnackBar(content: Text('Успешно додаден трошок!')),
         );
         Navigator.pop(context, widget.event);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add expense: $e')),
+          SnackBar(content: Text('Грешка: $e')),
         );
       }
     }
@@ -72,7 +70,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Expense'),
+        title: const Text('Додај нов трошок'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -82,38 +80,38 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Expense Name'),
+                decoration: const InputDecoration(labelText: 'Има на трошокот'),
                 onSaved: (value) {
                   name = value ?? '';
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a name';
+                    return 'Ве молам внесете име';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: const InputDecoration(labelText: 'Опис'),
                 onSaved: (value) {
                   description = value ?? '';
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Amount'),
+                decoration: const InputDecoration(labelText: 'Износ'),
                 keyboardType: TextInputType.number,
                 onSaved: (value) {
                   amount = double.tryParse(value ?? '0') ?? 0;
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
+                    return 'Ве молам внесете износ';
                   }
                   final parsedValue = double.tryParse(value);
                   if (parsedValue == null || parsedValue <= 0) {
-                    return 'Please enter a valid amount';
+                    return 'Ве молам внесете валидна вредност за износ';
                   }
                   return null;
                 },
@@ -123,7 +121,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saveExpense,
-                  child: const Text('Save Expense'),
+                  child: const Text('Зачувај трошок'),
                 ),
               ),
             ],

@@ -1,18 +1,16 @@
-import 'dart:math';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/event.dart';
-import '../models/expense.dart';
 import '../models/participant.dart';
 import '../services/event_service.dart';
+import '../services/transaction_service.dart';
 import '../widgets/add_participants_dialog.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/user_list_item.dart';
 import 'new_expense_screen.dart';
+import 'transaction_details_screen.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final Event event;
@@ -29,6 +27,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   void initState() {
     super.initState();
     _event = widget.event;
+    _refreshTransactions();
+  }
+
+  Future<void> _refreshTransactions() async {
+    final transactions = await TransactionService().getTransactionsForEvent(_event.id);
+    setState(() {
+      _event.transactions = transactions;
+    });
   }
 
   Future<void> _addParticipants(List<String> emails, ) async {
@@ -57,11 +63,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Widget build(BuildContext context) {
     final totalExpenses =
     _event.expenses.fold(0.0, (sum, expense) => sum + expense.amount);
-    final paidExpenses = _event.expenses
-        .where((expense) => expense.status == ExpenseStatus.paid)
-        .fold(0.0, (sum, expense) => sum + expense.amount);
 
-    final userBalance = Random().nextInt(2001) - 1000;
+    final userBalance = EventService().getUserBalance(_event, FirebaseAuth.instance.currentUser?.uid ?? '');
     final currentUser = FirebaseAuth.instance.currentUser;
     final isOrganizer = currentUser?.uid == _event.organizer.firebaseUID;
 
@@ -135,14 +138,35 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             const SizedBox(height: 16),
 
             Text(
-              'Вкупно: ${paidExpenses.toStringAsFixed(2)} / ${totalExpenses.toStringAsFixed(2)} ден.',
+              'Вкупно: ${totalExpenses.toStringAsFixed(2)} ден.',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             Text(
               userBalance > 0
                   ? 'Треба да добиете: ${userBalance.toStringAsFixed(2)} ден.'
-                  : 'Должите: ${(-userBalance).toStringAsFixed(2)} ден.',
+                  : userBalance == 0
+                      ? "Не должите никому, и никој не ви должи"
+                      : 'Должите: ${(-userBalance).toStringAsFixed(2)} ден.',
               style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+
+            ElevatedButton.icon(
+              onPressed: () async {
+                final updatedEvent = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TransactionDetailsScreen(event: _event),
+                  ),
+                );
+                if (updatedEvent != null) {
+                  setState(() {
+                    _event = updatedEvent;
+                  });
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Плаќања'),
             ),
             const SizedBox(height: 16),
 
@@ -154,7 +178,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               user: p.user,
               email: p.email,
               size: 12,
-            )),
+              additionalText: p.status == ParticipantStatus.invited
+                      ? 'Чека на потврда'
+                      : p.status == ParticipantStatus.accepted
+                          ? 'Потврден учесник'
+                          : 'Одбива учество',
+                )),
             const SizedBox(height: 16),
 
             if (isOrganizer)

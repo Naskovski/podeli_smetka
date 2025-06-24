@@ -31,24 +31,15 @@ class ExpenseCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(expense.description),
             Text(
               'Износ: ${expense.amount.toStringAsFixed(2)} ден.',
               style: const TextStyle(color: Colors.green),
             ),
+            Text(
+              'Од: ${expense.createdBy.name}',
+              style: const TextStyle(color: Colors.grey),
+            ),
           ],
-        ),
-        trailing: Icon(
-          expense.status == ExpenseStatus.pending
-              ? Icons.pending
-              : expense.status == ExpenseStatus.paid
-              ? Icons.check_circle
-              : Icons.group,
-          color: expense.status == ExpenseStatus.pending
-              ? Colors.orange
-              : expense.status == ExpenseStatus.paid
-              ? Colors.green
-              : Colors.blue,
         ),
       ),
     );
