@@ -150,23 +150,26 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
-
-            ElevatedButton.icon(
-              onPressed: () async {
-                final updatedEvent = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TransactionDetailsScreen(event: _event),
-                  ),
-                );
-                if (updatedEvent != null) {
-                  setState(() {
-                    _event = updatedEvent;
-                  });
-                }
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Плаќања'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final updatedEvent = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          TransactionDetailsScreen(event: _event),
+                    ),
+                  );
+                  if (updatedEvent != null) {
+                    setState(() {
+                      _event = updatedEvent;
+                    });
+                  }
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Плаќања'),
+              ),
             ),
             const SizedBox(height: 16),
 
