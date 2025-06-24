@@ -244,6 +244,33 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   ),
                 ],
               ),
+
+            if (currentUser != null && currentUser.uid == _event.organizer.firebaseUID) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      await EventService().updateEventStatus(_event, EventStatus.completed);
+                      setState(() {
+                        _event.status = EventStatus.completed;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Настанот е успешно завршен.')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Грешка при завршување на настанот: $e')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.check_circle_outline_outlined),
+                  label: const Text('Заврши Настан'),
+                ),
+              ),
+            ]
+
           ],
         ),
       ),

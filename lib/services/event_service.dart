@@ -43,7 +43,6 @@ class EventService {
     return events;
   }
 
-
   Future<List<Event>> fetchEventsForUserAndStatus(EventStatus status) async {
     final email = await _getCurrentUserEmail();
 
@@ -62,7 +61,6 @@ class EventService {
 
     return events;
   }
-
 
   Future<void> addEvent(Event event) async {
     final json = event.toJson();
@@ -83,6 +81,14 @@ class EventService {
 
   Future<void> deleteEvent(String eventId) async {
     await _firestore.collection('events').doc(eventId).delete();
+  }
+
+  Future<void> updateEventStatus(Event event, EventStatus status) async {
+    final eventRef = _firestore.collection('events').doc(event.id);
+
+    await eventRef.update({
+      'status': status.name,
+    });
   }
 
   Future<List<Invite>> getInvitesForUser(User user, InviteStatus status) async {
@@ -199,6 +205,4 @@ class EventService {
         .map((doc) => TransactionModel.fromJson(doc.id, doc.data()))
         .toList();
   }
-
-
 }
