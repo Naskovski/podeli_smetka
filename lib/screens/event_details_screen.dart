@@ -113,7 +113,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             ),
             const SizedBox(height: 16),
 
-            if (isOrganizer)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -245,7 +244,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 ],
               ),
 
-            if (currentUser != null && currentUser.uid == _event.organizer.firebaseUID) ...[
+            if (isOrganizer) ...[
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
